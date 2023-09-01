@@ -7,6 +7,9 @@ import { TextureLoader } from "three/src/loaders/TextureLoader.js";
 
 import FontJSON from "/assets/Roboto-msdf.json";
 import FontImage from "/assets/Roboto-msdf.png";
+import image from "/assets/texture.jpg";
+
+const texture = new THREE.TextureLoader().load(image);
 
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
@@ -48,6 +51,7 @@ function init() {
   controls.update();
 
   createMenu();
+  createPlayer();
 
   renderer.setAnimationLoop(loop);
 }
@@ -170,6 +174,20 @@ function createMenu() {
   innerContainerThree.add(pauseButton);
 
   container.add(innerContainerOne, innerContainerTwo, innerContainerThree);
+}
+
+function createPlayer() {
+  const width = 6.0;
+  const height = 4.0;
+  const depth = 1.5;
+
+  const geometry = new THREE.BoxGeometry(width, height, depth);
+  const boxMat = new THREE.MeshBasicMaterial({ map: texture });
+  const boxMesh = new THREE.Mesh(geometry, boxMat);
+  boxMesh.position.set(-4, 1, -5);
+  boxMesh.rotateY(10);
+
+  scene.add(boxMesh);
 }
 
 function onWindowResize() {

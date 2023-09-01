@@ -65447,6 +65447,8 @@ module.exports = {
 };
 },{}],"assets/Roboto-msdf.png":[function(require,module,exports) {
 module.exports = "/Roboto-msdf.f120f538.png";
+},{}],"assets/texture.jpg":[function(require,module,exports) {
+module.exports = "/texture.75ccefa4.jpg";
 },{}],"src/index.js":[function(require,module,exports) {
 "use strict";
 
@@ -65458,9 +65460,11 @@ var _BoxLineGeometry = require("three/examples/jsm/geometries/BoxLineGeometry.js
 var _TextureLoader = require("three/src/loaders/TextureLoader.js");
 var _RobotoMsdf = _interopRequireDefault(require("/assets/Roboto-msdf.json"));
 var _RobotoMsdf2 = _interopRequireDefault(require("/assets/Roboto-msdf.png"));
+var _texture = _interopRequireDefault(require("/assets/texture.jpg"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+var texture = new THREE.TextureLoader().load(_texture.default);
 var WIDTH = window.innerWidth;
 var HEIGHT = window.innerHeight;
 var scene, camera, renderer, controls;
@@ -65492,6 +65496,7 @@ function init() {
   controls.target = new THREE.Vector3(0, 1, -1.8);
   controls.update();
   createMenu();
+  createPlayer();
   renderer.setAnimationLoop(loop);
 }
 function createMenu() {
@@ -65596,6 +65601,19 @@ function createMenu() {
   innerContainerThree.add(pauseButton);
   container.add(innerContainerOne, innerContainerTwo, innerContainerThree);
 }
+function createPlayer() {
+  var width = 6.0;
+  var height = 4.0;
+  var depth = 1.5;
+  var geometry = new THREE.BoxGeometry(width, height, depth);
+  var boxMat = new THREE.MeshBasicMaterial({
+    map: texture
+  });
+  var boxMesh = new THREE.Mesh(geometry, boxMat);
+  boxMesh.position.set(-4, 1, -5);
+  boxMesh.rotateY(10);
+  scene.add(boxMesh);
+}
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -65606,7 +65624,7 @@ function loop() {
   controls.update();
   renderer.render(scene, camera);
 }
-},{"three":"node_modules/three/build/three.module.js","three-mesh-ui":"node_modules/three-mesh-ui/build/three-mesh-ui.module.js","three/examples/jsm/webxr/VRButton.js":"node_modules/three/examples/jsm/webxr/VRButton.js","three/examples/jsm/controls/OrbitControls.js":"node_modules/three/examples/jsm/controls/OrbitControls.js","three/examples/jsm/geometries/BoxLineGeometry.js":"node_modules/three/examples/jsm/geometries/BoxLineGeometry.js","three/src/loaders/TextureLoader.js":"node_modules/three/src/loaders/TextureLoader.js","/assets/Roboto-msdf.json":"assets/Roboto-msdf.json","/assets/Roboto-msdf.png":"assets/Roboto-msdf.png"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"three":"node_modules/three/build/three.module.js","three-mesh-ui":"node_modules/three-mesh-ui/build/three-mesh-ui.module.js","three/examples/jsm/webxr/VRButton.js":"node_modules/three/examples/jsm/webxr/VRButton.js","three/examples/jsm/controls/OrbitControls.js":"node_modules/three/examples/jsm/controls/OrbitControls.js","three/examples/jsm/geometries/BoxLineGeometry.js":"node_modules/three/examples/jsm/geometries/BoxLineGeometry.js","three/src/loaders/TextureLoader.js":"node_modules/three/src/loaders/TextureLoader.js","/assets/Roboto-msdf.json":"assets/Roboto-msdf.json","/assets/Roboto-msdf.png":"assets/Roboto-msdf.png","/assets/texture.jpg":"assets/texture.jpg"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -65631,7 +65649,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58657" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59449" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
