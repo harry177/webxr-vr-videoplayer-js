@@ -1,11 +1,22 @@
 {
-  "name": "webxr-vr-videoplayer",
+  "name": "webxr-vr-videoplayer-js",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "parcel index.html --open",
+    "build": "parcel build index.html"
   },
   "author": "Artem Prygunov",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "parcel-bundler": "^1.12.5",
+    "three": "^0.156.0",
+    "three-mesh-ui": "^6.5.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.22.11",
+    "@babel/preset-env": "^7.22.14",
+    "babel-loader": "^9.1.3"
+  }
 }
