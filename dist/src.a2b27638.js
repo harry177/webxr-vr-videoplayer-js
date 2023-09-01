@@ -65507,11 +65507,37 @@ function createMenu() {
     fontFamily: fontName,
     fontTexture: fontName
   });
-  container.position.set(0, 1, -1.8);
+  container.position.set(4, 1, -5);
+  container.rotateY(100);
   scene.add(container);
+  var innerContainerOne = new _threeMeshUi.default.Block({
+    width: 5,
+    height: 2.3,
+    padding: 0.05,
+    borderRadius: 0.2,
+    justifyContent: "center",
+    textAlign: "center"
+  });
+  var innerContainerTwo = new _threeMeshUi.default.Block({
+    width: 5,
+    height: 2.3,
+    padding: 0.05,
+    borderRadius: 0.2,
+    justifyContent: "space-around",
+    contentDirection: "row",
+    textAlign: "center"
+  });
+  var innerContainerThree = new _threeMeshUi.default.Block({
+    width: 5,
+    height: 2.3,
+    padding: 0.05,
+    borderRadius: 0.2,
+    justifyContent: "center",
+    textAlign: "center"
+  });
   var playButton = new _threeMeshUi.default.Block({
-    width: 2,
-    height: 2,
+    width: 1.5,
+    height: 1.5,
     backgroundOpacity: 1,
     backgroundColor: new THREE.Color(0x777777),
     justifyContent: "center",
@@ -65524,8 +65550,8 @@ function createMenu() {
   });
   playButton.add(playText);
   var pauseButton = new _threeMeshUi.default.Block({
-    width: 2,
-    height: 2,
+    width: 1.5,
+    height: 1.5,
     backgroundOpacity: 1,
     backgroundColor: new THREE.Color(0x777777),
     justifyContent: "center",
@@ -65537,7 +65563,38 @@ function createMenu() {
     fontSize: 0.2
   });
   pauseButton.add(pauseText);
-  container.add(playButton, pauseButton);
+  var nextButton = new _threeMeshUi.default.Block({
+    width: 1.5,
+    height: 1.5,
+    backgroundOpacity: 1,
+    backgroundColor: new THREE.Color(0x777777),
+    justifyContent: "center",
+    textAlign: "center",
+    fontColor: new THREE.Color("white")
+  });
+  var nextText = new _threeMeshUi.default.Text({
+    content: "Next",
+    fontSize: 0.2
+  });
+  nextButton.add(nextText);
+  var prevButton = new _threeMeshUi.default.Block({
+    width: 1.5,
+    height: 1.5,
+    backgroundOpacity: 1,
+    backgroundColor: new THREE.Color(0x777777),
+    justifyContent: "center",
+    textAlign: "center",
+    fontColor: new THREE.Color("white")
+  });
+  var prevText = new _threeMeshUi.default.Text({
+    content: "Prev",
+    fontSize: 0.2
+  });
+  prevButton.add(prevText);
+  innerContainerOne.add(playButton);
+  innerContainerTwo.add(nextButton, prevButton);
+  innerContainerThree.add(pauseButton);
+  container.add(innerContainerOne, innerContainerTwo, innerContainerThree);
 }
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -65574,7 +65631,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51015" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58657" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

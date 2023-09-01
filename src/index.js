@@ -67,12 +67,39 @@ function createMenu() {
     fontTexture: fontName,
   });
 
-  container.position.set(0, 1, -1.8);
+  container.position.set(4, 1, -5);
+  container.rotateY(100)
   scene.add(container);
 
+  const innerContainerOne = new ThreeMeshUI.Block({
+    width: 5,
+    height: 2.3,
+    padding: 0.05,
+    borderRadius: 0.2,
+    justifyContent: "center",
+    textAlign: "center",
+  });
+  const innerContainerTwo = new ThreeMeshUI.Block({
+    width: 5,
+    height: 2.3,
+    padding: 0.05,
+    borderRadius: 0.2,
+    justifyContent: "space-around",
+    contentDirection: "row",
+    textAlign: "center",
+  });
+  const innerContainerThree = new ThreeMeshUI.Block({
+    width: 5,
+    height: 2.3,
+    padding: 0.05,
+    borderRadius: 0.2,
+    justifyContent: "center",
+    textAlign: "center",
+  });
+
   const playButton = new ThreeMeshUI.Block({
-    width: 2,
-    height: 2,
+    width: 1.5,
+    height: 1.5,
     backgroundOpacity: 1,
     backgroundColor: new THREE.Color(0x777777),
     justifyContent: "center",
@@ -88,8 +115,8 @@ function createMenu() {
   playButton.add(playText);
 
   const pauseButton = new ThreeMeshUI.Block({
-    width: 2,
-    height: 2,
+    width: 1.5,
+    height: 1.5,
     backgroundOpacity: 1,
     backgroundColor: new THREE.Color(0x777777),
     justifyContent: "center",
@@ -104,7 +131,45 @@ function createMenu() {
 
   pauseButton.add(pauseText);
 
-  container.add(playButton, pauseButton);
+  const nextButton = new ThreeMeshUI.Block({
+    width: 1.5,
+    height: 1.5,
+    backgroundOpacity: 1,
+    backgroundColor: new THREE.Color(0x777777),
+    justifyContent: "center",
+    textAlign: "center",
+    fontColor: new THREE.Color("white"),
+  });
+
+  const nextText = new ThreeMeshUI.Text({
+    content: "Next",
+    fontSize: 0.2,
+  });
+
+  nextButton.add(nextText);
+
+  const prevButton = new ThreeMeshUI.Block({
+    width: 1.5,
+    height: 1.5,
+    backgroundOpacity: 1,
+    backgroundColor: new THREE.Color(0x777777),
+    justifyContent: "center",
+    textAlign: "center",
+    fontColor: new THREE.Color("white"),
+  });
+
+  const prevText = new ThreeMeshUI.Text({
+    content: "Prev",
+    fontSize: 0.2,
+  });
+
+  prevButton.add(prevText);
+
+  innerContainerOne.add(playButton);
+  innerContainerTwo.add(nextButton, prevButton);
+  innerContainerThree.add(pauseButton);
+
+  container.add(innerContainerOne, innerContainerTwo, innerContainerThree);
 }
 
 function onWindowResize() {
