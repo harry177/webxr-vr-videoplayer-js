@@ -65449,6 +65449,8 @@ module.exports = {
 module.exports = "/Roboto-msdf.f120f538.png";
 },{}],"assets/texture.jpg":[function(require,module,exports) {
 module.exports = "/texture.75ccefa4.jpg";
+},{}],"assets/barbie.mp4":[function(require,module,exports) {
+module.exports = "/barbie.20161d0d.mp4";
 },{}],"src/index.js":[function(require,module,exports) {
 "use strict";
 
@@ -65461,13 +65463,14 @@ var _TextureLoader = require("three/src/loaders/TextureLoader.js");
 var _RobotoMsdf = _interopRequireDefault(require("/assets/Roboto-msdf.json"));
 var _RobotoMsdf2 = _interopRequireDefault(require("/assets/Roboto-msdf.png"));
 var _texture = _interopRequireDefault(require("/assets/texture.jpg"));
+var _barbie = _interopRequireDefault(require("/assets/barbie.mp4"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 var texture = new THREE.TextureLoader().load(_texture.default);
 var WIDTH = window.innerWidth;
 var HEIGHT = window.innerHeight;
-var scene, camera, renderer, controls;
+var scene, camera, renderer, controls, vrButton, video, controllers, vrSession;
 var fontName = "Roboto";
 window.addEventListener("load", preload);
 window.addEventListener("resize", onWindowResize);
@@ -65480,7 +65483,7 @@ function preload() {
 }
 function init() {
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x505050);
+  //scene.background = new THREE.Color(0x505050);
   camera = new THREE.PerspectiveCamera(60, WIDTH / HEIGHT, 0.1, 100);
   renderer = new THREE.WebGLRenderer({
     antialias: true,
@@ -65489,56 +65492,44 @@ function init() {
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(WIDTH, HEIGHT);
   renderer.xr.enabled = true;
-  document.body.appendChild(_VRButton.VRButton.createButton(renderer));
+  vrButton = _VRButton.VRButton.createButton(renderer);
+  document.body.appendChild(vrButton);
   document.body.appendChild(renderer.domElement);
   controls = new _OrbitControls.OrbitControls(camera, renderer.domElement);
   camera.position.set(0, 1.6, 3);
   controls.target = new THREE.Vector3(0, 1, -1.8);
   controls.update();
+  vrSession = renderer.xr.getSession();
+  controllers = renderer.xr.getController([0, 1]);
+  console.log(controllers);
   createMenu();
   createPlayer();
   renderer.setAnimationLoop(loop);
 }
 function createMenu() {
   var container = new _threeMeshUi.default.Block({
-    width: 5,
-    height: 7,
+    width: 8.5,
+    height: 8,
     padding: 0.05,
     borderRadius: 0.2,
-    justifyContent: "space-around",
+    justifyContent: "end",
     textAlign: "center"
   });
   container.set({
     fontFamily: fontName,
     fontTexture: fontName
   });
-  container.position.set(4, 1, -5);
-  container.rotateY(100);
+  container.position.set(0, 1, -5);
+  //container.rotateY(100);
   scene.add(container);
-  var innerContainerOne = new _threeMeshUi.default.Block({
-    width: 5,
-    height: 2.3,
-    padding: 0.05,
-    borderRadius: 0.2,
-    justifyContent: "center",
-    textAlign: "center"
-  });
-  var innerContainerTwo = new _threeMeshUi.default.Block({
-    width: 5,
+  var innerContainer = new _threeMeshUi.default.Block({
+    width: 7,
     height: 2.3,
     padding: 0.05,
     borderRadius: 0.2,
     justifyContent: "space-around",
-    contentDirection: "row",
-    textAlign: "center"
-  });
-  var innerContainerThree = new _threeMeshUi.default.Block({
-    width: 5,
-    height: 2.3,
-    padding: 0.05,
-    borderRadius: 0.2,
-    justifyContent: "center",
-    textAlign: "center"
+    textAlign: "center",
+    contentDirection: "row"
   });
   var playButton = new _threeMeshUi.default.Block({
     width: 1.5,
@@ -65548,6 +65539,10 @@ function createMenu() {
     justifyContent: "center",
     textAlign: "center",
     fontColor: new THREE.Color("white")
+  });
+  playButton.addEventListener("select", function () {
+    barbieVideo.needsUpdate = true;
+    video.play();
   });
   var playText = new _threeMeshUi.default.Text({
     content: "Play",
@@ -65596,24 +65591,56 @@ function createMenu() {
     fontSize: 0.2
   });
   prevButton.add(prevText);
-  innerContainerOne.add(playButton);
-  innerContainerTwo.add(nextButton, prevButton);
-  innerContainerThree.add(pauseButton);
-  container.add(innerContainerOne, innerContainerTwo, innerContainerThree);
+  innerContainer.add(nextButton, playButton, prevButton);
+  container.add(innerContainer);
 }
 function createPlayer() {
-  var width = 6.0;
-  var height = 4.0;
-  var depth = 1.5;
-  var geometry = new THREE.BoxGeometry(width, height, depth);
-  var boxMat = new THREE.MeshBasicMaterial({
-    map: texture
-  });
-  var boxMesh = new THREE.Mesh(geometry, boxMat);
+  /*const width = 6.0;
+  const height = 4.0;
+  const depth = 1.5;
+    const geometry = new THREE.BoxGeometry(width, height, depth);
+  const boxMat = new THREE.MeshBasicMaterial({ map: texture });
+  const boxMesh = new THREE.Mesh(geometry, boxMat);
   boxMesh.position.set(-4, 1, -5);
   boxMesh.rotateY(10);
-  scene.add(boxMesh);
+    scene.add(boxMesh);*/
+
+  video = document.createElement("video");
+  video.playsInline = true;
+  video.preload = "auto";
+  video.crossOrigin = "anonymous";
+  video.controls = true;
+  //video.poster = barbie;
+  video.autoplay = true;
+  video.loop = true;
+  video.style.display = "none";
+  var source = document.createElement("source");
+  source.type = "video/mp4";
+  source.src = _barbie.default;
+  document.body.appendChild(video);
+  video.appendChild(source);
+  var barbieVideo = new THREE.VideoTexture(video);
+  barbieVideo.minFilter = THREE.LinearFilter;
+  barbieVideo.magFilter = THREE.LinearFilter;
+  barbieVideo.format = THREE.RGBAFormat;
+  barbieVideo.needsUpdate = true;
+  var width = 6.0;
+  var height = 4.0;
+  var videoGeo = new THREE.PlaneGeometry(width, height);
+  var videoMat = new THREE.MeshBasicMaterial({
+    map: barbieVideo
+  });
+  var videoMesh = new THREE.Mesh(videoGeo, videoMat);
+  videoMesh.position.set(0, 2.3, -4.95);
+  scene.add(videoMesh);
+
+  /*vrButton.addEventListener("click", function () {
+    barbieVideo.needsUpdate = true;
+    video.play();
+    console.log("polundra");
+  });*/
 }
+
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -65623,8 +65650,45 @@ function loop() {
   _threeMeshUi.default.update();
   controls.update();
   renderer.render(scene, camera);
+  if (vrSession) {
+    var frameOfReferenceType = 'stage'; // Или 'head-model' для отображения контроллеров относительно модели головы
+    var referenceSpace = vrSession.requestReferenceSpace(frameOfReferenceType);
+    var frame = vrSession.requestAnimationFrame(function (timestamp, frame) {
+      var pose = frame.getViewerPose(referenceSpace);
+      if (pose) {
+        var inputSources = Array.from(vrSession.inputSources);
+        inputSources.forEach(function (inputSource) {
+          var inputPose = frame.getPose(inputSource.targetRaySpace, referenceSpace);
+          if (inputPose) {
+            var controllerMesh = controllers.find(function (controller) {
+              return controller.inputSource === inputSource;
+            });
+            if (controllerMesh) {
+              // Если у вас есть модель контроллера, вы можете обновить ее позицию и ориентацию
+              controllerMesh.position.copy(inputPose.transform.position);
+              controllerMesh.quaternion.copy(inputPose.transform.orientation);
+            } else {
+              // Если у вас нет модели контроллера, вы можете создать и отобразить собственное представление
+              var controllerGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+              var controllerMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00ff00
+              });
+              var _controllerMesh = new THREE.Mesh(controllerGeometry, controllerMaterial);
+              _controllerMesh.position.copy(inputPose.transform.position);
+              _controllerMesh.quaternion.copy(inputPose.transform.orientation);
+              scene.add(_controllerMesh);
+
+              // Сохраните ссылку на контроллер, чтобы можно было обновлять его позицию и ориентацию на каждом кадре
+              _controllerMesh.inputSource = inputSource;
+              controllers.push(_controllerMesh);
+            }
+          }
+        });
+      }
+    });
+  }
 }
-},{"three":"node_modules/three/build/three.module.js","three-mesh-ui":"node_modules/three-mesh-ui/build/three-mesh-ui.module.js","three/examples/jsm/webxr/VRButton.js":"node_modules/three/examples/jsm/webxr/VRButton.js","three/examples/jsm/controls/OrbitControls.js":"node_modules/three/examples/jsm/controls/OrbitControls.js","three/examples/jsm/geometries/BoxLineGeometry.js":"node_modules/three/examples/jsm/geometries/BoxLineGeometry.js","three/src/loaders/TextureLoader.js":"node_modules/three/src/loaders/TextureLoader.js","/assets/Roboto-msdf.json":"assets/Roboto-msdf.json","/assets/Roboto-msdf.png":"assets/Roboto-msdf.png","/assets/texture.jpg":"assets/texture.jpg"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"three":"node_modules/three/build/three.module.js","three-mesh-ui":"node_modules/three-mesh-ui/build/three-mesh-ui.module.js","three/examples/jsm/webxr/VRButton.js":"node_modules/three/examples/jsm/webxr/VRButton.js","three/examples/jsm/controls/OrbitControls.js":"node_modules/three/examples/jsm/controls/OrbitControls.js","three/examples/jsm/geometries/BoxLineGeometry.js":"node_modules/three/examples/jsm/geometries/BoxLineGeometry.js","three/src/loaders/TextureLoader.js":"node_modules/three/src/loaders/TextureLoader.js","/assets/Roboto-msdf.json":"assets/Roboto-msdf.json","/assets/Roboto-msdf.png":"assets/Roboto-msdf.png","/assets/texture.jpg":"assets/texture.jpg","/assets/barbie.mp4":"assets/barbie.mp4"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -65649,7 +65713,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59449" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63328" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
