@@ -3,6 +3,7 @@ import ThreeMeshUI from "three-mesh-ui";
 import { VRButton } from "three/examples/jsm/webxr/VRButton.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { BoxLineGeometry } from "three/examples/jsm/geometries/BoxLineGeometry.js";
+import { XRControllerModelFactory } from "three/examples/jsm/webxr/XRControllerModelFactory";
 import { TextureLoader } from "three/src/loaders/TextureLoader.js";
 
 import FontJSON from "/assets/Roboto-msdf.json";
@@ -15,7 +16,18 @@ const texture = new THREE.TextureLoader().load(image);
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
 
-let scene, camera, renderer, controls, vrButton, video, controllers, vrSession;
+let scene,
+  camera,
+  renderer,
+  controls,
+  vrButton,
+  video,
+  controllers = [],
+  vrSession,
+  raycaster,
+  intersects,
+  videoMesh,
+  playButton, pauseText, playText, playState = true;
 const fontName = "Roboto";
 
 window.addEventListener("load", preload);
@@ -52,10 +64,36 @@ function init() {
   controls.target = new THREE.Vector3(0, 1, -1.8);
   controls.update();
 
-    vrSession = renderer.xr.getSession();
-    controllers = renderer.xr.getController([0, 1])
+  vrSession = renderer.xr.getSession();
 
-    console.log(controllers);
+  controllers = buildControllers();
+
+  function onSelectStart(event, controller) {
+    //controller.children[0].scale.z = 10;
+    const rotationMatrix = new THREE.Matrix4();
+    rotationMatrix.extractRotation(controller.matrixWorld);
+    raycaster = new THREE.Raycaster();
+    raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+    raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotationMatrix);
+    intersects = raycaster.intersectObjects([playButton]);
+    console.log(intersects);
+    if (intersects.length > 0) {
+      console.log("polundra");
+      if (video.paused) {
+        video.play();
+        playState = false;
+      } else {
+        video.pause();
+        playState = true;
+      }
+    }
+  }
+
+  controllers.forEach((controller) => {
+    controller.addEventListener("selectstart", (event) =>
+      onSelectStart(event, controller)
+    );
+  });
 
   createMenu();
   createPlayer();
@@ -92,7 +130,7 @@ function createMenu() {
     contentDirection: "row",
   });
 
-  const playButton = new ThreeMeshUI.Block({
+  playButton = new ThreeMeshUI.Block({
     width: 1.5,
     height: 1.5,
     backgroundOpacity: 1,
@@ -102,13 +140,13 @@ function createMenu() {
     fontColor: new THREE.Color("white"),
   });
 
-  playButton.addEventListener("select", () => {
+  /*playButton.addEventListener("select", () => {
     barbieVideo.needsUpdate = true;
     video.play();
-  });
+  });*/
 
-  const playText = new ThreeMeshUI.Text({
-    content: "Play",
+  playText = new ThreeMeshUI.Text({
+    content: playState ? "Play" : "Pause",
     fontSize: 0.2,
   });
 
@@ -124,7 +162,7 @@ function createMenu() {
     fontColor: new THREE.Color("white"),
   });
 
-  const pauseText = new ThreeMeshUI.Text({
+  pauseText = new ThreeMeshUI.Text({
     content: "Pause",
     fontSize: 0.2,
   });
@@ -171,25 +209,13 @@ function createMenu() {
 }
 
 function createPlayer() {
-  /*const width = 6.0;
-  const height = 4.0;
-  const depth = 1.5;
-
-  const geometry = new THREE.BoxGeometry(width, height, depth);
-  const boxMat = new THREE.MeshBasicMaterial({ map: texture });
-  const boxMesh = new THREE.Mesh(geometry, boxMat);
-  boxMesh.position.set(-4, 1, -5);
-  boxMesh.rotateY(10);
-
-  scene.add(boxMesh);*/
-
   video = document.createElement("video");
   video.playsInline = true;
   video.preload = "auto";
   video.crossOrigin = "anonymous";
   video.controls = true;
   //video.poster = barbie;
-  video.autoplay = true;
+  //video.autoplay = true;
   video.loop = true;
   video.style.display = "none";
 
@@ -211,16 +237,39 @@ function createPlayer() {
 
   const videoGeo = new THREE.PlaneGeometry(width, height);
   const videoMat = new THREE.MeshBasicMaterial({ map: barbieVideo });
-  const videoMesh = new THREE.Mesh(videoGeo, videoMat);
+  videoMesh = new THREE.Mesh(videoGeo, videoMat);
   videoMesh.position.set(0, 2.3, -4.95);
 
   scene.add(videoMesh);
+}
 
-  /*vrButton.addEventListener("click", function () {
-    barbieVideo.needsUpdate = true;
-    video.play();
-    console.log("polundra");
-  });*/
+function buildControllers() {
+  const controllerModelFactory = new XRControllerModelFactory();
+
+  const geometry = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, -1),
+  ]);
+
+  const line = new THREE.Line(geometry);
+  line.scale.z = 10;
+
+  //const controllers = [];
+
+  for (let i = 0; i < 2; i++) {
+    const controller = renderer.xr.getController(i);
+    controller.add(line.clone());
+    controller.userData.selectPressed = false;
+    controller.userData.selectPressedPrev = false;
+    scene.add(controller);
+    controllers.push(controller);
+
+    const grip = renderer.xr.getControllerGrip(i);
+    grip.add(controllerModelFactory.createControllerModel(grip));
+    scene.add(grip);
+  }
+
+  return controllers;
 }
 
 function onWindowResize() {
@@ -234,40 +283,4 @@ function loop() {
 
   controls.update();
   renderer.render(scene, camera);
-
-  if (vrSession) {
-    const frameOfReferenceType = 'stage'; // Или 'head-model' для отображения контроллеров относительно модели головы
-    const referenceSpace = vrSession.requestReferenceSpace(frameOfReferenceType);
-    const frame = vrSession.requestAnimationFrame(function (timestamp, frame) {
-      const pose = frame.getViewerPose(referenceSpace);
-
-      if (pose) {
-        const inputSources = Array.from(vrSession.inputSources);
-        inputSources.forEach(function (inputSource) {
-          const inputPose = frame.getPose(inputSource.targetRaySpace, referenceSpace);
-          if (inputPose) {
-            const controllerMesh = controllers.find((controller) => controller.inputSource === inputSource);
-          
-            if (controllerMesh) {
-              // Если у вас есть модель контроллера, вы можете обновить ее позицию и ориентацию
-              controllerMesh.position.copy(inputPose.transform.position);
-              controllerMesh.quaternion.copy(inputPose.transform.orientation);
-            } else {
-              // Если у вас нет модели контроллера, вы можете создать и отобразить собственное представление
-              const controllerGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-              const controllerMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-              const controllerMesh = new THREE.Mesh(controllerGeometry, controllerMaterial);
-              controllerMesh.position.copy(inputPose.transform.position);
-              controllerMesh.quaternion.copy(inputPose.transform.orientation);
-              scene.add(controllerMesh);
-          
-              // Сохраните ссылку на контроллер, чтобы можно было обновлять его позицию и ориентацию на каждом кадре
-              controllerMesh.inputSource = inputSource;
-              controllers.push(controllerMesh);
-            }
-          }
-        });
-      }
-    });
-  }
 }
