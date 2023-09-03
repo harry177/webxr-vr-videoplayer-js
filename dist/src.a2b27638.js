@@ -70138,7 +70138,8 @@ var scene,
   playButton,
   pauseText,
   playText,
-  playState = true;
+  playState = true,
+  idleStateAttributes;
 var fontName = "Roboto";
 window.addEventListener("load", preload);
 window.addEventListener("resize", onWindowResize);
@@ -70183,8 +70184,11 @@ function init() {
       if (video.paused) {
         video.play();
         playState = false;
+        console.log(playButton.children);
+        playText.setState('pause');
       } else {
         video.pause();
+        playText.setState('play');
         playState = true;
       }
     }
@@ -70232,16 +70236,34 @@ function createMenu() {
     textAlign: "center",
     fontColor: new THREE.Color("white")
   });
-
-  /*playButton.addEventListener("select", () => {
-    barbieVideo.needsUpdate = true;
-    video.play();
-  });*/
-
+  idleStateAttributes = {
+    fontColor: new THREE.Color('red')
+  };
+  var pauseTextAttributes = {
+    content: 'Pause'
+  };
+  var playTextAttributes = {
+    content: 'Play'
+  };
   playText = new _threeMeshUi.default.Text({
-    content: playState ? "Play" : "Pause",
+    content: 'Play',
     fontSize: 0.2
   });
+  playText.setupState({
+    state: 'pause',
+    attributes: pauseTextAttributes
+  });
+  playText.setupState({
+    state: 'play',
+    attributes: playTextAttributes
+  });
+
+  /*playButton.setupState({
+    state: 'idle',
+    attributes: idleStateAttributes,
+    content: 'Pause'
+  })*/
+
   playButton.add(playText);
   var pauseButton = new _threeMeshUi.default.Block({
     width: 1.5,
@@ -70374,7 +70396,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64581" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58580" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

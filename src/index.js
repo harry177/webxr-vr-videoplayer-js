@@ -27,7 +27,7 @@ let scene,
   raycaster,
   intersects,
   videoMesh,
-  playButton, pauseText, playText, playState = true;
+  playButton, pauseText, playText, playState = true, idleStateAttributes;
 const fontName = "Roboto";
 
 window.addEventListener("load", preload);
@@ -81,9 +81,12 @@ function init() {
       console.log("polundra");
       if (video.paused) {
         video.play();
-        playState = false;
+      playState = false;
+      console.log(playButton.children)
+      playText.setState('pause')
       } else {
         video.pause();
+        playText.setState('play')
         playState = true;
       }
     }
@@ -140,15 +143,35 @@ function createMenu() {
     fontColor: new THREE.Color("white"),
   });
 
-  /*playButton.addEventListener("select", () => {
-    barbieVideo.needsUpdate = true;
-    video.play();
-  });*/
+  idleStateAttributes = {
+		
+      fontColor: new THREE.Color( 'red' ),
+
+    
+	};
+
+  const pauseTextAttributes = {
+    content: 'Pause'
+  }
+
+  const playTextAttributes = {
+    content: 'Play'
+  }
 
   playText = new ThreeMeshUI.Text({
-    content: playState ? "Play" : "Pause",
+    content: 'Play',
     fontSize: 0.2,
   });
+
+  playText.setupState({
+    state: 'pause',
+    attributes: pauseTextAttributes
+  })
+  playText.setupState({
+    state: 'play',
+    attributes: playTextAttributes
+  })
+
 
   playButton.add(playText);
 
@@ -253,8 +276,6 @@ function buildControllers() {
 
   const line = new THREE.Line(geometry);
   line.scale.z = 10;
-
-  //const controllers = [];
 
   for (let i = 0; i < 2; i++) {
     const controller = renderer.xr.getController(i);
