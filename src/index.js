@@ -24,10 +24,16 @@ let scene,
   video,
   controllers = [],
   vrSession,
-  raycaster,
+  raycaster = new THREE.Raycaster(),
+  rotationMatrix = new THREE.Matrix4(),
   intersects,
   videoMesh,
-  playButton, pauseText, playText, playState = true, idleStateAttributes;
+  playButton,
+  nextButton,
+  prevButton,
+  pauseText,
+  playText;
+
 const fontName = "Roboto";
 
 window.addEventListener("load", preload);
@@ -70,24 +76,20 @@ function init() {
 
   function onSelectStart(event, controller) {
     //controller.children[0].scale.z = 10;
-    const rotationMatrix = new THREE.Matrix4();
+    //rotationMatrix = new THREE.Matrix4();
     rotationMatrix.extractRotation(controller.matrixWorld);
-    raycaster = new THREE.Raycaster();
+    //raycaster = new THREE.Raycaster();
     raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
     raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotationMatrix);
     intersects = raycaster.intersectObjects([playButton]);
     console.log(intersects);
     if (intersects.length > 0) {
-      console.log("polundra");
       if (video.paused) {
         video.play();
-      playState = false;
-      console.log(playButton.children)
-      playText.setState('pause')
+        playText.setState("pause");
       } else {
         video.pause();
-        playText.setState('play')
-        playState = true;
+        playText.setState("play");
       }
     }
   }
@@ -120,7 +122,7 @@ function createMenu() {
   });
 
   container.position.set(0, 1, -5);
-  //container.rotateY(100);
+  
   scene.add(container);
 
   const innerContainer = new ThreeMeshUI.Block({
@@ -143,35 +145,98 @@ function createMenu() {
     fontColor: new THREE.Color("white"),
   });
 
-  idleStateAttributes = {
-		
-      fontColor: new THREE.Color( 'red' ),
+  nextButton = new ThreeMeshUI.Block({
+    width: 1.5,
+    height: 1.5,
+    backgroundOpacity: 1,
+    backgroundColor: new THREE.Color(0x777777),
+    justifyContent: "center",
+    textAlign: "center",
+    fontColor: new THREE.Color("white"),
+  });
 
-    
-	};
+  const nextText = new ThreeMeshUI.Text({
+    content: "Next",
+    fontSize: 0.2,
+  });
+
+  nextButton.add(nextText);
+
+  prevButton = new ThreeMeshUI.Block({
+    width: 1.5,
+    height: 1.5,
+    backgroundOpacity: 1,
+    backgroundColor: new THREE.Color(0x777777),
+    justifyContent: "center",
+    textAlign: "center",
+    fontColor: new THREE.Color("white"),
+  });
+
+  const prevText = new ThreeMeshUI.Text({
+    content: "Prev",
+    fontSize: 0.2,
+  });
+
+  prevButton.add(prevText);
+
+  const hoveredAttributes = {
+    backgroundColor: new THREE.Color("white"),
+    backgroundOpacity: 0.3,
+  };
+
+  const idleAttributes = {
+    backgroundColor: new THREE.Color(0x777777),
+  };
+
+  playButton.setupState({
+    state: "hovered",
+    attributes: hoveredAttributes,
+  });
+
+  playButton.setupState({
+    state: "idle",
+    attributes: idleAttributes,
+  });
+  nextButton.setupState({
+    state: "hovered",
+    attributes: hoveredAttributes,
+  });
+
+  nextButton.setupState({
+    state: "idle",
+    attributes: idleAttributes,
+  });
+  prevButton.setupState({
+    state: "hovered",
+    attributes: hoveredAttributes,
+  });
+
+  prevButton.setupState({
+    state: "idle",
+    attributes: idleAttributes,
+  });
 
   const pauseTextAttributes = {
-    content: 'Pause'
-  }
+    content: "Pause",
+  };
 
   const playTextAttributes = {
-    content: 'Play'
-  }
+    content: "Play",
+  };
 
   playText = new ThreeMeshUI.Text({
-    content: 'Play',
+    content: "Play",
     fontSize: 0.2,
   });
 
   playText.setupState({
-    state: 'pause',
-    attributes: pauseTextAttributes
-  })
+    state: "pause",
+    attributes: pauseTextAttributes,
+  });
   playText.setupState({
-    state: 'play',
-    attributes: playTextAttributes
-  })
-
+    state: "play",
+    attributes: playTextAttributes,
+  });
 
   playButton.add(playText);
 
@@ -191,40 +256,6 @@ function createMenu() {
   });
 
   pauseButton.add(pauseText);
-
-  const nextButton = new ThreeMeshUI.Block({
-    width: 1.5,
-    height: 1.5,
-    backgroundOpacity: 1,
-    backgroundColor: new THREE.Color(0x777777),
-    justifyContent: "center",
-    textAlign: "center",
-    fontColor: new THREE.Color("white"),
-  });
-
-  const nextText = new ThreeMeshUI.Text({
-    content: "Next",
-    fontSize: 0.2,
-  });
-
-  nextButton.add(nextText);
-
-  const prevButton = new ThreeMeshUI.Block({
-    width: 1.5,
-    height: 1.5,
-    backgroundOpacity: 1,
-    backgroundColor: new THREE.Color(0x777777),
-    justifyContent: "center",
-    textAlign: "center",
-    fontColor: new THREE.Color("white"),
-  });
-
-  const prevText = new ThreeMeshUI.Text({
-    content: "Prev",
-    fontSize: 0.2,
-  });
-
-  prevButton.add(prevText);
 
   innerContainer.add(nextButton, playButton, prevButton);
 
@@ -293,6 +324,38 @@ function buildControllers() {
   return controllers;
 }
 
+function handleControllers(controller1, controller2) {
+  const rotationMatrix1 = new THREE.Matrix4();
+  rotationMatrix1.extractRotation(controller1.matrixWorld);
+  const raycaster1 = new THREE.Raycaster();
+  raycaster1.ray.origin.setFromMatrixPosition(controller1.matrixWorld);
+  raycaster1.ray.direction.set(0, 0, -1).applyMatrix4(rotationMatrix1);
+
+  const rotationMatrix2 = new THREE.Matrix4();
+  rotationMatrix2.extractRotation(controller2.matrixWorld);
+  const raycaster2 = new THREE.Raycaster();
+  raycaster2.ray.origin.setFromMatrixPosition(controller2.matrixWorld);
+  raycaster2.ray.direction.set(0, 0, -1).applyMatrix4(rotationMatrix2);
+
+  const buttons = [playButton, nextButton, prevButton];
+
+  buttons.forEach((button) => {
+    let isHovered = false;
+    if (
+      raycaster1.intersectObject(button).length > 0 ||
+      raycaster2.intersectObject(button).length > 0
+    ) {
+      isHovered = true;
+    }
+
+    if (isHovered) {
+      button.setState("hovered");
+    } else {
+      button.setState("idle");
+    }
+  });
+}
+
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -301,6 +364,13 @@ function onWindowResize() {
 
 function loop() {
   ThreeMeshUI.update();
+
+  if (controllers) {
+    const controller1 = controllers[0];
+    const controller2 = controllers[1];
+
+    handleControllers(controller1, controller2);
+  }
 
   controls.update();
   renderer.render(scene, camera);

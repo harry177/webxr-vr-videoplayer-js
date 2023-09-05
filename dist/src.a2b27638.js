@@ -70132,14 +70132,15 @@ var scene,
   video,
   controllers = [],
   vrSession,
-  raycaster,
+  raycaster = new THREE.Raycaster(),
+  rotationMatrix = new THREE.Matrix4(),
   intersects,
   videoMesh,
   playButton,
+  nextButton,
+  prevButton,
   pauseText,
-  playText,
-  playState = true,
-  idleStateAttributes;
+  playText;
 var fontName = "Roboto";
 window.addEventListener("load", preload);
 window.addEventListener("resize", onWindowResize);
@@ -70172,24 +70173,20 @@ function init() {
   controllers = buildControllers();
   function onSelectStart(event, controller) {
     //controller.children[0].scale.z = 10;
-    var rotationMatrix = new THREE.Matrix4();
+    //rotationMatrix = new THREE.Matrix4();
     rotationMatrix.extractRotation(controller.matrixWorld);
-    raycaster = new THREE.Raycaster();
+    //raycaster = new THREE.Raycaster();
     raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
     raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotationMatrix);
     intersects = raycaster.intersectObjects([playButton]);
     console.log(intersects);
     if (intersects.length > 0) {
-      console.log("polundra");
       if (video.paused) {
         video.play();
-        playState = false;
-        console.log(playButton.children);
-        playText.setState('pause');
+        playText.setState("pause");
       } else {
         video.pause();
-        playText.setState('play');
-        playState = true;
+        playText.setState("play");
       }
     }
   }
@@ -70216,7 +70213,6 @@ function createMenu() {
     fontTexture: fontName
   });
   container.position.set(0, 1, -5);
-  //container.rotateY(100);
   scene.add(container);
   var innerContainer = new _threeMeshUi.default.Block({
     width: 7,
@@ -70236,34 +70232,83 @@ function createMenu() {
     textAlign: "center",
     fontColor: new THREE.Color("white")
   });
-  idleStateAttributes = {
-    fontColor: new THREE.Color('red')
+  nextButton = new _threeMeshUi.default.Block({
+    width: 1.5,
+    height: 1.5,
+    backgroundOpacity: 1,
+    backgroundColor: new THREE.Color(0x777777),
+    justifyContent: "center",
+    textAlign: "center",
+    fontColor: new THREE.Color("white")
+  });
+  var nextText = new _threeMeshUi.default.Text({
+    content: "Next",
+    fontSize: 0.2
+  });
+  nextButton.add(nextText);
+  prevButton = new _threeMeshUi.default.Block({
+    width: 1.5,
+    height: 1.5,
+    backgroundOpacity: 1,
+    backgroundColor: new THREE.Color(0x777777),
+    justifyContent: "center",
+    textAlign: "center",
+    fontColor: new THREE.Color("white")
+  });
+  var prevText = new _threeMeshUi.default.Text({
+    content: "Prev",
+    fontSize: 0.2
+  });
+  prevButton.add(prevText);
+  var hoveredAttributes = {
+    backgroundColor: new THREE.Color("white"),
+    backgroundOpacity: 0.3
   };
+  var idleAttributes = {
+    backgroundColor: new THREE.Color(0x777777)
+  };
+  playButton.setupState({
+    state: "hovered",
+    attributes: hoveredAttributes
+  });
+  playButton.setupState({
+    state: "idle",
+    attributes: idleAttributes
+  });
+  nextButton.setupState({
+    state: "hovered",
+    attributes: hoveredAttributes
+  });
+  nextButton.setupState({
+    state: "idle",
+    attributes: idleAttributes
+  });
+  prevButton.setupState({
+    state: "hovered",
+    attributes: hoveredAttributes
+  });
+  prevButton.setupState({
+    state: "idle",
+    attributes: idleAttributes
+  });
   var pauseTextAttributes = {
-    content: 'Pause'
+    content: "Pause"
   };
   var playTextAttributes = {
-    content: 'Play'
+    content: "Play"
   };
   playText = new _threeMeshUi.default.Text({
-    content: 'Play',
+    content: "Play",
     fontSize: 0.2
   });
   playText.setupState({
-    state: 'pause',
+    state: "pause",
     attributes: pauseTextAttributes
   });
   playText.setupState({
-    state: 'play',
+    state: "play",
     attributes: playTextAttributes
   });
-
-  /*playButton.setupState({
-    state: 'idle',
-    attributes: idleStateAttributes,
-    content: 'Pause'
-  })*/
-
   playButton.add(playText);
   var pauseButton = new _threeMeshUi.default.Block({
     width: 1.5,
@@ -70279,34 +70324,6 @@ function createMenu() {
     fontSize: 0.2
   });
   pauseButton.add(pauseText);
-  var nextButton = new _threeMeshUi.default.Block({
-    width: 1.5,
-    height: 1.5,
-    backgroundOpacity: 1,
-    backgroundColor: new THREE.Color(0x777777),
-    justifyContent: "center",
-    textAlign: "center",
-    fontColor: new THREE.Color("white")
-  });
-  var nextText = new _threeMeshUi.default.Text({
-    content: "Next",
-    fontSize: 0.2
-  });
-  nextButton.add(nextText);
-  var prevButton = new _threeMeshUi.default.Block({
-    width: 1.5,
-    height: 1.5,
-    backgroundOpacity: 1,
-    backgroundColor: new THREE.Color(0x777777),
-    justifyContent: "center",
-    textAlign: "center",
-    fontColor: new THREE.Color("white")
-  });
-  var prevText = new _threeMeshUi.default.Text({
-    content: "Prev",
-    fontSize: 0.2
-  });
-  prevButton.add(prevText);
   innerContainer.add(nextButton, playButton, prevButton);
   container.add(innerContainer);
 }
@@ -70345,9 +70362,6 @@ function buildControllers() {
   var geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1)]);
   var line = new THREE.Line(geometry);
   line.scale.z = 10;
-
-  //const controllers = [];
-
   for (var i = 0; i < 2; i++) {
     var controller = renderer.xr.getController(i);
     controller.add(line.clone());
@@ -70361,6 +70375,30 @@ function buildControllers() {
   }
   return controllers;
 }
+function handleControllers(controller1, controller2) {
+  var rotationMatrix1 = new THREE.Matrix4();
+  rotationMatrix1.extractRotation(controller1.matrixWorld);
+  var raycaster1 = new THREE.Raycaster();
+  raycaster1.ray.origin.setFromMatrixPosition(controller1.matrixWorld);
+  raycaster1.ray.direction.set(0, 0, -1).applyMatrix4(rotationMatrix1);
+  var rotationMatrix2 = new THREE.Matrix4();
+  rotationMatrix2.extractRotation(controller2.matrixWorld);
+  var raycaster2 = new THREE.Raycaster();
+  raycaster2.ray.origin.setFromMatrixPosition(controller2.matrixWorld);
+  raycaster2.ray.direction.set(0, 0, -1).applyMatrix4(rotationMatrix2);
+  var buttons = [playButton, nextButton, prevButton];
+  buttons.forEach(function (button) {
+    var isHovered = false;
+    if (raycaster1.intersectObject(button).length > 0 || raycaster2.intersectObject(button).length > 0) {
+      isHovered = true;
+    }
+    if (isHovered) {
+      button.setState("hovered");
+    } else {
+      button.setState("idle");
+    }
+  });
+}
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -70368,6 +70406,11 @@ function onWindowResize() {
 }
 function loop() {
   _threeMeshUi.default.update();
+  if (controllers) {
+    var controller1 = controllers[0];
+    var controller2 = controllers[1];
+    handleControllers(controller1, controller2);
+  }
   controls.update();
   renderer.render(scene, camera);
 }
@@ -70396,7 +70439,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58580" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54419" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
