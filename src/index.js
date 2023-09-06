@@ -8,10 +8,19 @@ import { TextureLoader } from "three/src/loaders/TextureLoader.js";
 
 import FontJSON from "/assets/Roboto-msdf.json";
 import FontImage from "/assets/Roboto-msdf.png";
-import image from "/assets/texture.jpg";
-import videoSource from "/assets/barbie.mp4";
 
-const texture = new THREE.TextureLoader().load(image);
+import barbieImage from "/assets/barbie.jpg";
+import pokeImage from "/assets/poke.jpg";
+import strangerImage from "/assets/stranger.jpg";
+
+import barbieSource from "/assets/barbie.mp4";
+import pokeSource from "/assets/poke.mp4";
+import strangerSource from "/assets/stranger.mp4";
+
+
+const barbiePoster = new THREE.TextureLoader().load(barbieImage);
+const pokePoster = new THREE.TextureLoader().load(pokeImage);
+const strangerPoster = new THREE.TextureLoader().load(strangerImage);
 
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
@@ -22,11 +31,15 @@ let scene,
   controls,
   vrButton,
   video,
+  source,
   controllers = [],
+  textures = [barbiePoster, pokePoster, strangerPoster],
+  videos = [barbieSource, pokeSource, strangerSource],
   vrSession,
   raycaster = new THREE.Raycaster(),
   rotationMatrix = new THREE.Matrix4(),
   intersects,
+  videoTexture,
   videoMesh,
   playButton,
   nextButton,
@@ -82,14 +95,52 @@ function init() {
     raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
     raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotationMatrix);
     intersects = raycaster.intersectObjects([playButton]);
+    const next = raycaster.intersectObjects([nextButton]);
+    const prev = raycaster.intersectObjects([prevButton]);
     console.log(intersects);
     if (intersects.length > 0) {
       if (video.paused) {
+        videoMesh.material.map = videoTexture;
         video.play();
         playText.setState("pause");
       } else {
         video.pause();
         playText.setState("play");
+      }
+    }
+    else if (next.length > 0) {
+      const shiftedVideos = videos.shift();
+      videos.push(shiftedVideos);
+    
+      const shiftedPosters = textures.shift();
+      textures.push(shiftedPosters);
+    
+      source.src = videos[0];
+      video.load();
+      if (playText.content === "Pause") {
+        videoMesh.material.map = videoTexture;
+        video.play();
+      } else {
+        video.pause();
+        videoMesh.material.map = textures[0];
+      }
+    }
+    
+    else if (prev.length > 0) {
+      const poppedVideos = videos.pop();
+      videos.unshift(poppedVideos);
+      
+      const poppedPosters = textures.pop();
+      textures.unshift(poppedPosters);
+    
+      source.src = videos[0];
+      video.load();
+      if (playText.content === "Pause") {
+        videoMesh.material.map = videoTexture;
+        video.play();
+      } else {
+        video.pause();
+        videoMesh.material.map = textures[0];
       }
     }
   }
@@ -130,6 +181,7 @@ function createMenu() {
     height: 2.3,
     padding: 0.05,
     borderRadius: 0.2,
+    backgroundColor: new THREE.Color(0x614747),
     justifyContent: "space-around",
     textAlign: "center",
     contentDirection: "row",
@@ -268,29 +320,27 @@ function createPlayer() {
   video.preload = "auto";
   video.crossOrigin = "anonymous";
   video.controls = true;
-  //video.poster = barbie;
-  //video.autoplay = true;
   video.loop = true;
   video.style.display = "none";
 
-  const source = document.createElement("source");
+  source = document.createElement("source");
   source.type = "video/mp4";
-  source.src = videoSource;
+  source.src = videos[0];
 
   document.body.appendChild(video);
   video.appendChild(source);
 
-  const barbieVideo = new THREE.VideoTexture(video);
-  barbieVideo.minFilter = THREE.LinearFilter;
-  barbieVideo.magFilter = THREE.LinearFilter;
-  barbieVideo.format = THREE.RGBAFormat;
-  barbieVideo.needsUpdate = true;
+  videoTexture = new THREE.VideoTexture(video);
+  videoTexture.minFilter = THREE.LinearFilter;
+  videoTexture.magFilter = THREE.LinearFilter;
+  videoTexture.format = THREE.RGBAFormat;
+  videoTexture.needsUpdate = true;
 
   const width = 6.0;
   const height = 4.0;
 
   const videoGeo = new THREE.PlaneGeometry(width, height);
-  const videoMat = new THREE.MeshBasicMaterial({ map: barbieVideo });
+  const videoMat = new THREE.MeshBasicMaterial({ map: textures[0] });
   videoMesh = new THREE.Mesh(videoGeo, videoMat);
   videoMesh.position.set(0, 2.3, -4.95);
 

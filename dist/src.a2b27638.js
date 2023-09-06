@@ -70100,10 +70100,18 @@ module.exports = {
 };
 },{}],"assets/Roboto-msdf.png":[function(require,module,exports) {
 module.exports = "/Roboto-msdf.f120f538.png";
-},{}],"assets/texture.jpg":[function(require,module,exports) {
-module.exports = "/texture.75ccefa4.jpg";
+},{}],"assets/barbie.jpg":[function(require,module,exports) {
+module.exports = "/barbie.9f725130.jpg";
+},{}],"assets/poke.jpg":[function(require,module,exports) {
+module.exports = "/poke.03f31441.jpg";
+},{}],"assets/stranger.jpg":[function(require,module,exports) {
+module.exports = "/stranger.88f5ec7e.jpg";
 },{}],"assets/barbie.mp4":[function(require,module,exports) {
 module.exports = "/barbie.20161d0d.mp4";
+},{}],"assets/poke.mp4":[function(require,module,exports) {
+module.exports = "/poke.0485e9c6.mp4";
+},{}],"assets/stranger.mp4":[function(require,module,exports) {
+module.exports = "/stranger.7ec720e2.mp4";
 },{}],"src/index.js":[function(require,module,exports) {
 "use strict";
 
@@ -70116,12 +70124,18 @@ var _XRControllerModelFactory = require("three/examples/jsm/webxr/XRControllerMo
 var _TextureLoader = require("three/src/loaders/TextureLoader.js");
 var _RobotoMsdf = _interopRequireDefault(require("/assets/Roboto-msdf.json"));
 var _RobotoMsdf2 = _interopRequireDefault(require("/assets/Roboto-msdf.png"));
-var _texture = _interopRequireDefault(require("/assets/texture.jpg"));
-var _barbie = _interopRequireDefault(require("/assets/barbie.mp4"));
+var _barbie = _interopRequireDefault(require("/assets/barbie.jpg"));
+var _poke = _interopRequireDefault(require("/assets/poke.jpg"));
+var _stranger = _interopRequireDefault(require("/assets/stranger.jpg"));
+var _barbie2 = _interopRequireDefault(require("/assets/barbie.mp4"));
+var _poke2 = _interopRequireDefault(require("/assets/poke.mp4"));
+var _stranger2 = _interopRequireDefault(require("/assets/stranger.mp4"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-var texture = new THREE.TextureLoader().load(_texture.default);
+var barbiePoster = new THREE.TextureLoader().load(_barbie.default);
+var pokePoster = new THREE.TextureLoader().load(_poke.default);
+var strangerPoster = new THREE.TextureLoader().load(_stranger.default);
 var WIDTH = window.innerWidth;
 var HEIGHT = window.innerHeight;
 var scene,
@@ -70130,11 +70144,15 @@ var scene,
   controls,
   vrButton,
   video,
+  source,
   controllers = [],
+  textures = [barbiePoster, pokePoster, strangerPoster],
+  videos = [_barbie2.default, _poke2.default, _stranger2.default],
   vrSession,
   raycaster = new THREE.Raycaster(),
   rotationMatrix = new THREE.Matrix4(),
   intersects,
+  videoTexture,
   videoMesh,
   playButton,
   nextButton,
@@ -70179,14 +70197,45 @@ function init() {
     raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
     raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotationMatrix);
     intersects = raycaster.intersectObjects([playButton]);
+    var next = raycaster.intersectObjects([nextButton]);
+    var prev = raycaster.intersectObjects([prevButton]);
     console.log(intersects);
     if (intersects.length > 0) {
       if (video.paused) {
+        videoMesh.material.map = videoTexture;
         video.play();
         playText.setState("pause");
       } else {
         video.pause();
         playText.setState("play");
+      }
+    } else if (next.length > 0) {
+      var shiftedVideos = videos.shift();
+      videos.push(shiftedVideos);
+      var shiftedPosters = textures.shift();
+      textures.push(shiftedPosters);
+      source.src = videos[0];
+      video.load();
+      if (playText.content === "Pause") {
+        videoMesh.material.map = videoTexture;
+        video.play();
+      } else {
+        video.pause();
+        videoMesh.material.map = textures[0];
+      }
+    } else if (prev.length > 0) {
+      var poppedVideos = videos.pop();
+      videos.unshift(poppedVideos);
+      var poppedPosters = textures.pop();
+      textures.unshift(poppedPosters);
+      source.src = videos[0];
+      video.load();
+      if (playText.content === "Pause") {
+        videoMesh.material.map = videoTexture;
+        video.play();
+      } else {
+        video.pause();
+        videoMesh.material.map = textures[0];
       }
     }
   }
@@ -70219,6 +70268,7 @@ function createMenu() {
     height: 2.3,
     padding: 0.05,
     borderRadius: 0.2,
+    backgroundColor: new THREE.Color(0x614747),
     justifyContent: "space-around",
     textAlign: "center",
     contentDirection: "row"
@@ -70333,25 +70383,23 @@ function createPlayer() {
   video.preload = "auto";
   video.crossOrigin = "anonymous";
   video.controls = true;
-  //video.poster = barbie;
-  //video.autoplay = true;
   video.loop = true;
   video.style.display = "none";
-  var source = document.createElement("source");
+  source = document.createElement("source");
   source.type = "video/mp4";
-  source.src = _barbie.default;
+  source.src = videos[0];
   document.body.appendChild(video);
   video.appendChild(source);
-  var barbieVideo = new THREE.VideoTexture(video);
-  barbieVideo.minFilter = THREE.LinearFilter;
-  barbieVideo.magFilter = THREE.LinearFilter;
-  barbieVideo.format = THREE.RGBAFormat;
-  barbieVideo.needsUpdate = true;
+  videoTexture = new THREE.VideoTexture(video);
+  videoTexture.minFilter = THREE.LinearFilter;
+  videoTexture.magFilter = THREE.LinearFilter;
+  videoTexture.format = THREE.RGBAFormat;
+  videoTexture.needsUpdate = true;
   var width = 6.0;
   var height = 4.0;
   var videoGeo = new THREE.PlaneGeometry(width, height);
   var videoMat = new THREE.MeshBasicMaterial({
-    map: barbieVideo
+    map: textures[0]
   });
   videoMesh = new THREE.Mesh(videoGeo, videoMat);
   videoMesh.position.set(0, 2.3, -4.95);
@@ -70414,7 +70462,7 @@ function loop() {
   controls.update();
   renderer.render(scene, camera);
 }
-},{"three":"node_modules/three/build/three.module.js","three-mesh-ui":"node_modules/three-mesh-ui/build/three-mesh-ui.module.js","three/examples/jsm/webxr/VRButton.js":"node_modules/three/examples/jsm/webxr/VRButton.js","three/examples/jsm/controls/OrbitControls.js":"node_modules/three/examples/jsm/controls/OrbitControls.js","three/examples/jsm/geometries/BoxLineGeometry.js":"node_modules/three/examples/jsm/geometries/BoxLineGeometry.js","three/examples/jsm/webxr/XRControllerModelFactory":"node_modules/three/examples/jsm/webxr/XRControllerModelFactory.js","three/src/loaders/TextureLoader.js":"node_modules/three/src/loaders/TextureLoader.js","/assets/Roboto-msdf.json":"assets/Roboto-msdf.json","/assets/Roboto-msdf.png":"assets/Roboto-msdf.png","/assets/texture.jpg":"assets/texture.jpg","/assets/barbie.mp4":"assets/barbie.mp4"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"three":"node_modules/three/build/three.module.js","three-mesh-ui":"node_modules/three-mesh-ui/build/three-mesh-ui.module.js","three/examples/jsm/webxr/VRButton.js":"node_modules/three/examples/jsm/webxr/VRButton.js","three/examples/jsm/controls/OrbitControls.js":"node_modules/three/examples/jsm/controls/OrbitControls.js","three/examples/jsm/geometries/BoxLineGeometry.js":"node_modules/three/examples/jsm/geometries/BoxLineGeometry.js","three/examples/jsm/webxr/XRControllerModelFactory":"node_modules/three/examples/jsm/webxr/XRControllerModelFactory.js","three/src/loaders/TextureLoader.js":"node_modules/three/src/loaders/TextureLoader.js","/assets/Roboto-msdf.json":"assets/Roboto-msdf.json","/assets/Roboto-msdf.png":"assets/Roboto-msdf.png","/assets/barbie.jpg":"assets/barbie.jpg","/assets/poke.jpg":"assets/poke.jpg","/assets/stranger.jpg":"assets/stranger.jpg","/assets/barbie.mp4":"assets/barbie.mp4","/assets/poke.mp4":"assets/poke.mp4","/assets/stranger.mp4":"assets/stranger.mp4"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -70439,7 +70487,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54419" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51606" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
