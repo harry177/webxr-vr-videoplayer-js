@@ -309,7 +309,7 @@ function createMenu() {
 
   pauseButton.add(pauseText);
 
-  innerContainer.add(nextButton, playButton, prevButton);
+  innerContainer.add(prevButton, playButton, nextButton);
 
   container.add(innerContainer);
 }

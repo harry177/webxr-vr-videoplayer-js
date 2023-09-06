@@ -70374,7 +70374,7 @@ function createMenu() {
     fontSize: 0.2
   });
   pauseButton.add(pauseText);
-  innerContainer.add(nextButton, playButton, prevButton);
+  innerContainer.add(prevButton, playButton, nextButton);
   container.add(innerContainer);
 }
 function createPlayer() {
@@ -70487,7 +70487,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51606" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57037" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
